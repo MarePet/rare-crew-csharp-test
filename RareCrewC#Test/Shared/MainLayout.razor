@@ -1,0 +1,21 @@
+﻿@inherits LayoutComponentBase
+
+<div class="app-container" style="display:flex; min-height:100vh; flex-direction:column;">
+    <header style="background-color:#0078D7; color:white; padding:1rem;">
+        <h1>Rare Crew Test</h1>
+    </header>
+
+    <div style="flex:1; display:flex;">
+        <nav style="width:200px; background:#f0f0f0; padding:1rem;">
+            <NavMenu />
+        </nav>
+
+        <main style="flex:1; padding:1rem;">
+            @Body
+        </main>
+    </div>
+
+    <footer style="background:#eee; padding:1rem; text-align:center;">
+        &copy; 2025 My Company
+    </footer>
+</div>

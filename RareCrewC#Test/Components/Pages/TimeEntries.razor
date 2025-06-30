@@ -1,0 +1,61 @@
+﻿@page "/timeentries"
+@using Application.DTOs.Response
+@using System.Globalization
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<h3>Employee Time Entries</h3>
+
+@if (entries == null)
+{
+    <p>Loading...</p>
+}
+else if (!entries.Any())
+{
+    <p>No records found.</p>
+}
+else
+{
+    <table class="table-auto border w-full">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border px-3 py-1">Name</th>
+                <th class="border px-3 py-1">Total Hours</th>
+                <th class="border px-3 py-1">Debug Info</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in entries)
+            {
+                <tr class="@((e.TotalHours ?? 0) < 100 ? "bg-red-100" : "")" style="@((e.TotalHours ?? 0) < 100 ? "background-color: #fee2e2;" : "")">
+                    <td class="border px-3 py-1">@((e.Name ?? "(No name)"))</td>
+                    <td class="border px-3 py-1">@((e.TotalHours?.ToString("F2", CultureInfo.InvariantCulture) ?? "0.00"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ICollection<EmployeeTimeEntryResponseDTO>? entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Http.BaseAddress is null)
+        {
+            Http.BaseAddress = new Uri(NavManager.BaseUri);
+        }
+
+        var response = await Http.GetAsync("api/timeentries");
+
+        if (response == null || !response.IsSuccessStatusCode)
+        {
+            entries = null;
+        }
+        else
+        {
+            entries = await response.Content.ReadFromJsonAsync<ICollection<EmployeeTimeEntryResponseDTO>>();
+        }
+    }
+}
+
