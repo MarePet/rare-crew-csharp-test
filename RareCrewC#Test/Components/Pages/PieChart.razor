@@ -1,0 +1,68 @@
+﻿@page "/timechart"
+@using Application.DTOs.Response
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<PageTitle>Time Distribution Chart</PageTitle>
+
+<h3>Employee Time Distribution</h3>
+
+@if (isLoading)
+{
+    <p>Loading chart...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+else if (!string.IsNullOrEmpty(chartBase64))
+{
+    <div style="text-align: center;">
+        <img src="data:image/png;base64,@chartBase64" alt="Employee Time Distribution Chart" style="max-width: 100%; height: auto;" />
+    </div>
+}
+
+@code {
+    private string? chartBase64;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChart();
+    }
+
+    private async Task LoadChart()
+    {
+        if (Http.BaseAddress is null)
+        {
+            Http.BaseAddress = new Uri(NavManager.BaseUri);
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await Http.GetAsync("api/chart/pie");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ChartResponse>();
+                chartBase64 = result?.ImageBase64;
+            }
+            else
+            {
+                errorMessage = $"Failed to load chart: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading chart: {ex.Message}";
+        }
+
+        isLoading = false;
+    }
+}

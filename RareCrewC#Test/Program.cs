@@ -6,13 +6,15 @@ using RareCrewCSharpTest;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.Configure<TimeEntriesSection>(builder.Configuration.GetSection(nameof(TimeEntriesSection)));
+builder.Services.Configure<ExternalURLs>(builder.Configuration.GetSection(nameof(ExternalURLs)));
+builder.Services.Configure<BaseUrlSection>(builder.Configuration.GetSection(nameof(BaseUrlSection)));
 builder.Services.AddTransient<ITimeEntryService, TimeEntryService>();
+builder.Services.AddTransient<IChartService, ChartService>();
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient("Default", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:5001/"); // Use your actual dev URL and port
+    client.BaseAddress = new Uri("https://localhost:7020/"); 
 });
 
 

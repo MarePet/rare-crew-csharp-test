@@ -8,11 +8,11 @@ using System.Net.Http.Json;
 
 namespace DataAccess.Services
 {
-    public class TimeEntryService(HttpClient httpClient, IOptions<TimeEntriesSection> options) : ITimeEntryService
+    public class TimeEntryService(HttpClient httpClient, IOptions<ExternalURLs> options) : ITimeEntryService
     {
         private readonly HttpClient httpClient = httpClient;
-        private readonly IOptions<TimeEntriesSection> options = options;
-        private readonly string? URL = options.Value.URL;
+        private readonly IOptions<ExternalURLs> options = options;
+        private readonly string? URL = options.Value.TimeEntriesURL;
 
         public async Task<Result<ICollection<EmployeeTimeEntryResponseDTO>>> GetTimeEntriesAsync()
         {
