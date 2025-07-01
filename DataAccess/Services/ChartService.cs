@@ -1,41 +1,27 @@
-﻿using Application.ApplicationSettingSections;
-using Application.DTOs;
+﻿using Application.DTOs;
 using Application.DTOs.Response;
 using Application.Enums;
 using Application.IServices;
-using Microsoft.Extensions.Options;
 using SkiaSharp;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Net.Http.Json;
 
 namespace DataAccess.Services
 {
-    public class ChartService(HttpClient httpClient, IOptions<BaseUrlSection> options) : IChartService
+    public class ChartService(ITimeEntryService timeEntryService) : IChartService
     {
-        private readonly HttpClient httpClient = httpClient;
-        private readonly IOptions<BaseUrlSection> options = options;
-        private readonly string? URL = string.Format("{0}{1}", options.Value.BaseUrl, options.Value.TimeEntriesUrl);
+        readonly ITimeEntryService timeEntryService = timeEntryService;
         public async Task<Result<string?>> GeneratePieChartAsync()
         {
             try
             {
-                var timeEntiresResponse = await httpClient.GetAsync(URL);
+                var timeEntiresResponse = await timeEntryService.GetTimeEntriesAsync();
 
-                if (timeEntiresResponse == null || !timeEntiresResponse.IsSuccessStatusCode)
+                if(timeEntiresResponse == null || timeEntiresResponse.Data == null || !timeEntiresResponse.IsSuccess)
                 {
-                    return Result<string?>.Failure(errorCode: ErrorCodeEnum.BadRequest, errorMessage: "Failed to retrieve time entries from external server.");
+                    return Result<string?>.Failure(errorCode: ErrorCodeEnum.InternalServerError,
+                        errorMessage: "Failed to retrieve time entries.");
                 }
 
-                var entries = await timeEntiresResponse.Content.ReadFromJsonAsync<ICollection<EmployeeTimeEntryResponseDTO>>();
-
-                if (entries == null || !entries.Any())
-                {
-                    return Result<string?>.Failure(errorCode: ErrorCodeEnum.BadRequest, errorMessage: "No time entries found.");
-                }
-
-                var validEntries = entries.Where(e => e.TotalHours.HasValue && e.TotalHours.Value > 0).ToList();
+                var validEntries = timeEntiresResponse.Data.Where(e => e.TotalHours.HasValue && e.TotalHours.Value > 0).ToList();
                 if (!validEntries.Any())
                 {
                     return Result<string?>.Failure(errorCode: ErrorCodeEnum.BadRequest,
@@ -44,7 +30,6 @@ namespace DataAccess.Services
 
                 var base64Image = GeneratePieChartImage(validEntries);
                 return Result<string?>.Success(base64Image);
-
             }
             catch
             {
@@ -71,7 +56,6 @@ namespace DataAccess.Services
 
             var rect = new SKRect(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
 
-            // Draw pie slices
             float startAngle = 0;
             for (int i = 0; i < entries.Count; i++)
             {
@@ -96,7 +80,6 @@ namespace DataAccess.Services
                 startAngle += sweepAngle;
             }
 
-            // Draw legend
             DrawLegend(canvas, entries, colors, totalHours);
 
             using var image = surface.Snapshot();
@@ -144,18 +127,14 @@ namespace DataAccess.Services
         private SKColor[] GenerateRandomColors(int count)
         {
             var colors = new SKColor[count];
-            var random = new Random();
-
             for (int i = 0; i < count; i++)
             {
-                // Generate random RGB values
-                byte r = (byte)random.Next(50, 256); // Avoid very dark colors
+                var random = new Random();
+                byte r = (byte)random.Next(50, 256);
                 byte g = (byte)random.Next(50, 256);
                 byte b = (byte)random.Next(50, 256);
-
                 colors[i] = new SKColor(r, g, b);
             }
-
             return colors;
         }
     }

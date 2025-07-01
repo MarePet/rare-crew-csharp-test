@@ -7,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.Configure<ExternalURLs>(builder.Configuration.GetSection(nameof(ExternalURLs)));
-builder.Services.Configure<BaseUrlSection>(builder.Configuration.GetSection(nameof(BaseUrlSection)));
 builder.Services.AddTransient<ITimeEntryService, TimeEntryService>();
 builder.Services.AddTransient<IChartService, ChartService>();
 builder.Services.AddHttpClient();
@@ -30,7 +29,7 @@ app.UseAntiforgery();
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles(); // serve wwwroot static assets
+app.UseStaticFiles(); 
 
 app.MapControllers();
 
